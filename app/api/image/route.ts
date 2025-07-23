@@ -1,5 +1,6 @@
 import { getResponseFromGeminiAI } from "@/app/(dashboard)/(routes)/image/geminiiai"
 import { getResponseFromOpenAI } from "@/app/(dashboard)/(routes)/image/openai"
+import { checkApiLimit, increaseApiLimit } from "@/lib/api-limit"
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -24,6 +25,14 @@ export async function POST(req: Request) {
     if (!resolution) {
       return new NextResponse("Resolution is required", { status: 400 })
     }
+
+    const freeTrial = await checkApiLimit()
+
+    if (!freeTrial) {
+      return new NextResponse("Free trial has expired.", { status: 403 })
+    }
+
+    await increaseApiLimit()
 
     const openAIResponse = await getResponseFromOpenAI({
       prompt,

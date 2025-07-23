@@ -1,5 +1,6 @@
 import { getResponseFromGeminiAI } from "@/app/(dashboard)/(routes)/conversation/geminiiai"
 import { getResponseFromOpenAI } from "@/app/(dashboard)/(routes)/conversation/openai"
+import { checkApiLimit, increaseApiLimit } from "@/lib/api-limit"
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { ChatCompletionMessageParam } from "openai/resources"
@@ -18,6 +19,14 @@ export async function POST(req: Request) {
       return new NextResponse("Messages are required", { status: 400 })
     }
 
+    const freeTrial = await checkApiLimit()
+
+    if (!freeTrial) {
+      return new NextResponse("Free trial has expired.", { status: 403 })
+    }
+
+    await increaseApiLimit()
+
     const openAIResponse = await getResponseFromOpenAI({ messages })
 
     if (openAIResponse.status === 200)
@@ -32,8 +41,7 @@ export async function POST(req: Request) {
 
     if (geminiAIResponse.status === 200)
       return NextResponse.json(geminiAIResponse.data)
-
-    throw new Error("Something went wrong")
+    else throw new Error("Something went wrong")
   } catch (error) {
     console.log("Error", error)
     return new NextResponse("Internal error", { status: 500 })

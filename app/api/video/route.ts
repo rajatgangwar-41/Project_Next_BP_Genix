@@ -2,6 +2,7 @@ import { getResponseFromReplicateAI } from "@/app/(dashboard)/(routes)/video/rep
 import { getResponseFromGeminiAI } from "@/app/(dashboard)/(routes)/video/geminiiai"
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
+import { checkApiLimit, increaseApiLimit } from "@/lib/api-limit"
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +17,14 @@ export async function POST(req: Request) {
     if (!prompt) {
       return new NextResponse("Prompt is required", { status: 400 })
     }
+
+    const freeTrial = await checkApiLimit()
+
+    if (!freeTrial) {
+      return new NextResponse("Free trial has expired.", { status: 403 })
+    }
+
+    await increaseApiLimit()
 
     const replicateResponse = await getResponseFromReplicateAI({
       prompt,
