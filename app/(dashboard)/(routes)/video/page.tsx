@@ -16,9 +16,11 @@ import { useState } from "react"
 import { Empty } from "@/components/empty"
 import { Loader } from "@/components/loader"
 import { ServiceInactiveCard } from "@/components/service-inactive-card"
+import { useProModal } from "@/hooks/use-pro-modal"
 
 const VideoPage = () => {
   const router = useRouter()
+  const proModal = useProModal()
   const [video, setVideo] = useState<string>("")
   const [showInactiveCard, setShowInactiveCard] = useState<boolean>(false)
 
@@ -42,9 +44,17 @@ const VideoPage = () => {
       setVideo(response.data)
 
       form.reset()
-    } catch (error) {
-      console.log(error)
-      setShowInactiveCard(true)
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { status?: number } }).response
+          ?.status === "number" &&
+        (error as { response?: { status?: number } }).response?.status === 403
+      ) {
+        proModal.onOpen()
+      } else setShowInactiveCard(true)
     } finally {
       router.refresh()
     }

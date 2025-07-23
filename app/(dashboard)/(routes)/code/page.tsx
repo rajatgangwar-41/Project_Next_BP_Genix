@@ -22,9 +22,11 @@ import { BotAvatar } from "@/components/bot-avatar"
 import Markdown from "react-markdown"
 import rehypeHighlight from "rehype-highlight"
 import "highlight.js/styles/github-dark.css"
+import { useProModal } from "@/hooks/use-pro-modal"
 
 const CodePage = () => {
   const router = useRouter()
+  const proModal = useProModal()
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([])
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -55,8 +57,17 @@ const CodePage = () => {
       ])
 
       form.reset()
-    } catch (error) {
-      console.log(error)
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { status?: number } }).response
+          ?.status === "number" &&
+        (error as { response?: { status?: number } }).response?.status === 403
+      ) {
+        proModal.onOpen()
+      }
     } finally {
       router.refresh()
     }

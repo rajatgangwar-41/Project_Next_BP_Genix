@@ -20,9 +20,11 @@ import { Loader } from "@/components/loader"
 import { cn } from "@/lib/utils"
 import { UserAvatar } from "@/components/user-avatar"
 import { BotAvatar } from "@/components/bot-avatar"
+import { useProModal } from "@/hooks/use-pro-modal"
 
 const ConversationPage = () => {
   const router = useRouter()
+  const proModal = useProModal()
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([])
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,8 +55,17 @@ const ConversationPage = () => {
       ])
 
       form.reset()
-    } catch (error) {
-      console.log(error)
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { status?: number } }).response
+          ?.status === "number" &&
+        (error as { response?: { status?: number } }).response?.status === 403
+      ) {
+        proModal.onOpen()
+      }
     } finally {
       router.refresh()
     }
