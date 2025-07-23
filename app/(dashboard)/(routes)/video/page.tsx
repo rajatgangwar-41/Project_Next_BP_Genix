@@ -3,10 +3,9 @@
 import * as z from "zod"
 import axios from "axios"
 import { useRouter } from "next/navigation"
-import { MessageSquare } from "lucide-react"
+import { Video } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import ReactMarkdown from "react-markdown"
 
 import { formSchema } from "./constants"
 import { Heading } from "@/components/heading"
@@ -14,16 +13,14 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
-import { ChatCompletionMessageParam } from "openai/resources"
 import { Empty } from "@/components/empty"
 import { Loader } from "@/components/loader"
-import { cn } from "@/lib/utils"
-import { UserAvatar } from "@/components/user-avatar"
-import { BotAvatar } from "@/components/bot-avatar"
+import { ServiceInactiveCard } from "@/components/service-inactive-card"
 
-const ConversationPage = () => {
+const VideoPage = () => {
   const router = useRouter()
-  const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([])
+  const [video, setVideo] = useState<string>("")
+  const [showInactiveCard, setShowInactiveCard] = useState<boolean>(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -36,38 +33,35 @@ const ConversationPage = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const userMessage: ChatCompletionMessageParam = {
-        role: "user",
-        content: values.prompt,
-      }
-      const newMessages = [...messages, userMessage]
+      setVideo("")
 
-      const response = await axios.post("/api/conversation", {
-        messages: newMessages,
-      })
+      const response = await axios.post("/api/video", values)
 
-      setMessages((current: ChatCompletionMessageParam[]) => [
-        ...current,
-        userMessage,
-        response.data,
-      ])
+      console.log(response)
+
+      setVideo(response.data)
 
       form.reset()
     } catch (error) {
       console.log(error)
+      setShowInactiveCard(true)
     } finally {
       router.refresh()
     }
   }
 
+  const closeInactiveCard = () => {
+    setShowInactiveCard(false)
+  }
+
   return (
     <div>
       <Heading
-        title="Conversation"
-        description="Our most advanced conversation model."
-        icon={MessageSquare}
-        iconColor="text-violet-500"
-        bgColor="bg-violet-500/10"
+        title="Video Generation"
+        description="Turn your prompt into video."
+        icon={Video}
+        iconColor="text-orange-700"
+        bgColor="bg-orange-700/10"
       />
       <div className="px-4 lg:px-8">
         <div>
@@ -82,9 +76,9 @@ const ConversationPage = () => {
                   <FormItem className="col-span-12 lg:col-span-10">
                     <FormControl className="m-0 p-0">
                       <Input
-                        className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
+                        className="border-0 px-4 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
                         disabled={isLoading}
-                        placeholder="How do I calculate the radius of a circle?"
+                        placeholder="Gold fish swimming around a coral reef"
                         {...field}
                       />
                     </FormControl>
@@ -102,35 +96,26 @@ const ConversationPage = () => {
         </div>
         <div className="space-y-4 mt-4">
           {isLoading && (
-            <div className="p-8 rounded-lg w-full flex items-center justify-center bg-muted">
+            <div className="p-20">
               <Loader />
             </div>
-          )}{" "}
-          {messages.length === 0 && !isLoading && (
-            <Empty label="No conversation started." />
           )}
-          <div className="flex flex-col-reverse gap-y-4">
-            {messages.map((message: ChatCompletionMessageParam) => (
-              <div
-                key={crypto.randomUUID()}
-                className={cn(
-                  "p-8 w-full flex items-start gap-x-8 rounded-lg",
-                  message.role === "user"
-                    ? "bg-white border border-black/10"
-                    : "bg-muted"
-                )}
-              >
-                {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
-                <div className="prose prose-xl text-sm">
-                  <ReactMarkdown>{String(message.content)}</ReactMarkdown>
-                </div>
-              </div>
-            ))}
-          </div>
+          {showInactiveCard && (
+            <ServiceInactiveCard onClose={closeInactiveCard} />
+          )}
+          {!video && !isLoading && <Empty label="No video generated." />}
+          {video && (
+            <video
+              controls
+              className="w-full aspect-video mt-8 rounded-lg border bg-black"
+            >
+              <source src={video} />
+            </video>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-export default ConversationPage
+export default VideoPage

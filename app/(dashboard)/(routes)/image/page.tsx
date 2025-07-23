@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { Empty } from "@/components/empty"
 import { Loader } from "@/components/loader"
-import "highlight.js/styles/github-dark.css"
 import {
   Select,
   SelectContent,
