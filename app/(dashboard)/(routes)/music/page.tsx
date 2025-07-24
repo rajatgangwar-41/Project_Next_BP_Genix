@@ -16,6 +16,7 @@ import { Empty } from "@/components/empty"
 import { Loader } from "@/components/loader"
 import { ServiceInactiveCard } from "@/components/service-inactive-card" // Ensure this path is correct
 import { useProModal } from "@/hooks/use-pro-modal"
+import { toast } from "sonner"
 
 const MusicPage = () => {
   const router = useRouter()
@@ -51,6 +52,8 @@ const MusicPage = () => {
         (error as { response?: { status?: number } }).response?.status === 403
       ) {
         proModal.onOpen()
+      } else {
+        toast.error("Something went wrong.")
       }
     } finally {
       router.refresh()

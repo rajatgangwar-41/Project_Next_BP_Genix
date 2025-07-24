@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { UserAvatar } from "@/components/user-avatar"
 import { BotAvatar } from "@/components/bot-avatar"
 import { useProModal } from "@/hooks/use-pro-modal"
+import { toast } from "sonner"
 
 const ConversationPage = () => {
   const router = useRouter()
@@ -38,6 +39,7 @@ const ConversationPage = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      throw new Error()
       const userMessage: ChatCompletionMessageParam = {
         role: "user",
         content: values.prompt,
@@ -65,6 +67,8 @@ const ConversationPage = () => {
         (error as { response?: { status?: number } }).response?.status === 403
       ) {
         proModal.onOpen()
+      } else {
+        toast.error("Something went wrong.")
       }
     } finally {
       router.refresh()

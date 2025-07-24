@@ -17,6 +17,7 @@ import { Empty } from "@/components/empty"
 import { Loader } from "@/components/loader"
 import { ServiceInactiveCard } from "@/components/service-inactive-card"
 import { useProModal } from "@/hooks/use-pro-modal"
+import { toast } from "sonner"
 
 const VideoPage = () => {
   const router = useRouter()
@@ -54,7 +55,9 @@ const VideoPage = () => {
         (error as { response?: { status?: number } }).response?.status === 403
       ) {
         proModal.onOpen()
-      } else setShowInactiveCard(true)
+      } else {
+        toast.error("Something went wrong.")
+      }
     } finally {
       router.refresh()
     }

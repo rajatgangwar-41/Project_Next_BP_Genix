@@ -23,6 +23,7 @@ import Markdown from "react-markdown"
 import rehypeHighlight from "rehype-highlight"
 import "highlight.js/styles/github-dark.css"
 import { useProModal } from "@/hooks/use-pro-modal"
+import { toast } from "sonner"
 
 const CodePage = () => {
   const router = useRouter()
@@ -67,6 +68,8 @@ const CodePage = () => {
         (error as { response?: { status?: number } }).response?.status === 403
       ) {
         proModal.onOpen()
+      } else {
+        toast.error("Something went wrong.")
       }
     } finally {
       router.refresh()

@@ -22,6 +22,9 @@ import {
   Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useState } from "react"
+import axios from "axios"
+import { toast } from "sonner"
 
 const tools = [
   {
@@ -58,6 +61,21 @@ const tools = [
 
 export const ProModal = () => {
   const proModal = useProModal()
+  const [loading, setLoading] = useState<boolean>(false)
+
+  const onSubscribe = async () => {
+    try {
+      setLoading(true)
+      const response = await axios.get("/api/stripe")
+
+      window.location.href = (await response).data.url
+    } catch (error) {
+      console.log(error, "STRIPE_CLIENT_ERROR")
+      toast.error("Something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <Dialog open={proModal.isOpen} onOpenChange={proModal.onClose}>
@@ -89,7 +107,13 @@ export const ProModal = () => {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button size="lg" variant="premium" className="w-full">
+          <Button
+            onClick={onSubscribe}
+            disabled={loading}
+            size="lg"
+            variant="premium"
+            className="w-full"
+          >
             Upgrade
             <Zap className="w-4 h-4 ml-2 fill-white" />
           </Button>
